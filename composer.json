@@ -1,0 +1,26 @@
+{
+  "name": "glowpointzero/typo3-site-operator",
+  "description": "",
+
+  "license": ["GPL-2.0+"],
+  "type": "typo3-cms-extension",
+  "replace": {
+    "site_operator": "*"
+  },
+  "authors": [
+    {
+      "name": "Manuel Glauser",
+      "email": "dev@manuelglauser.ch",
+      "role": "Developer"
+    }
+  ],
+  "require": {
+    "symfony/console": "^3.0 || ^4.0",
+    "symfony/filesystem": "^3.0 || ^4.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "Glowpointzero\\SiteOperator\\": "Classes/"
+    }
+  }
+}
