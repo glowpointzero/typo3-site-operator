@@ -454,6 +454,13 @@ class TcaBuilder implements \Psr\Log\LoggerAwareInterface
         return $this;
     }
 
+    /**
+     * Basically adds a 'checkbox', but displays it as a toggle UI element.
+     *
+     * @param $columnName
+     * @return $this
+     * @throws TcaBuilderException
+     */
     public function addToggleColumn($columnName)
     {
         $this->addCheckboxColumn($columnName)
@@ -462,6 +469,37 @@ class TcaBuilder implements \Psr\Log\LoggerAwareInterface
                     'renderType' => 'checkboxToggle'
                 ]
             ]);
+
+        return $this;
+    }
+
+    /**
+     * Adds a single record reference column. Not to be confused
+     * with 'addRelationColumn', which may contain multiple references.
+     *
+     * @todo Make this more obvious to the developer.
+     *
+     * @param string $columnName
+     * @param string $recordTableNames
+     * @return $this
+     */
+    public function addRecordReferenceColumn($columnName, $recordTableNames)
+    {
+        $columnConfiguration = [
+            'label' => $this->getColumnLabel($columnName),
+            'config' => [
+                'allowed' => $recordTableNames,
+                'type' => 'group',
+                'internal_type' => 'db',
+                'maxitems' => 1,
+                'minitems' => 0,
+                'size' => 1
+            ],
+        ];
+
+        $this->{self::$ITEM_TYPE_COLUMN_PROPERTY}[$columnName] = $columnConfiguration;
+        $this->lastAddedItemIdentifier = $columnName;
+        $this->lastAddedItemProperty = self::$ITEM_TYPE_COLUMN_PROPERTY;
 
         return $this;
     }
@@ -811,8 +849,11 @@ class TcaBuilder implements \Psr\Log\LoggerAwareInterface
                 $this->logger->error(sprintf('[%s]: Required column "%s" not found.', self::class, $requiredColumn));
                 continue;
             }
-            if ($tca['columns'][$requiredColumn]['config']['type'] === 'select') {
+            if (in_array($tca['columns'][$requiredColumn]['config']['type'], ['select', 'group'])) {
                 if (!isset($tca['columns'][$requiredColumn]['config']['minitems'])) {
+                    $tca['columns'][$requiredColumn]['config']['minitems'] = 1;
+                }
+                if ($tca['columns'][$requiredColumn]['config']['minitems'] < 1) {
                     $tca['columns'][$requiredColumn]['config']['minitems'] = 1;
                 }
                 continue;
