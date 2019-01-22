@@ -23,16 +23,16 @@ class MailMessage extends \TYPO3\CMS\Core\Mail\MailMessage implements \Psr\Log\L
     protected $htmlContent = '';
     protected $plainTextContent = '';
 
-    protected static $defaultEmbeddables = [];
+    protected static $defaultEmbeddables = ['all_sites' => []];
     protected $embeddables = [];
 
-    protected static $defaultPlainTextTemplatePathAndFilename = '';
+    protected static $defaultPlainTextTemplatePathAndFilename = ['all_sites' => ''];
     protected $plainTextPathAndFilename = '';
     
-    protected static $defaultHtmlTemplatePathAndFilename = '';
+    protected static $defaultHtmlTemplatePathAndFilename = ['all_sites' => ''];
     protected $htmlTemplatePathAndFilename = '';
 
-    protected static $defaultCssFilePath = '';
+    protected static $defaultCssFilePath = ['all_sites' => ''];
     protected $cssFilePath = '';
 
     /**
@@ -44,12 +44,33 @@ class MailMessage extends \TYPO3\CMS\Core\Mail\MailMessage implements \Psr\Log\L
         string $contentType = null,
         string $charset = null
     ) {
+        $siteIdentifier = \Glowpointzero\SiteOperator\ProjectInstance::getSiteIdentifier();
         $this->setLogger(GeneralUtility::makeInstance(\TYPO3\CMS\Core\Log\LogManager::class)->getLogger(__CLASS__));
-        foreach (self::$defaultEmbeddables as $defaultEmbeddableIdentifier => $defaultEmbeddableFilePath) {
+
+        foreach (self::$defaultEmbeddables['all_sites'] as $defaultEmbeddableIdentifier => $defaultEmbeddableFilePath) {
             $this->addEmbeddable($defaultEmbeddableIdentifier, $defaultEmbeddableFilePath);
         }
-        $this->setTemplatePathAndFilename(self::$defaultPlainTextTemplatePathAndFilename, self::$defaultHtmlTemplatePathAndFilename);
-        $this->setCssFilePath(self::$defaultCssFilePath);
+        if ($siteIdentifier && isset(self::$defaultEmbeddables[$siteIdentifier])) {
+            foreach (self::$defaultEmbeddables[$siteIdentifier] as $defaultEmbeddableIdentifier => $defaultEmbeddableFilePath) {
+                $this->addEmbeddable($defaultEmbeddableIdentifier, $defaultEmbeddableFilePath);
+            }
+        }
+
+        $plainTextTemplate = self::$defaultPlainTextTemplatePathAndFilename['all_sites'];
+        if ($siteIdentifier && isset(self::$defaultPlainTextTemplatePathAndFilename[$siteIdentifier])) {
+            $plainTextTemplate = self::$defaultPlainTextTemplatePathAndFilename[$siteIdentifier];
+        }
+        $htmlTemplate = self::$defaultHtmlTemplatePathAndFilename['all_sites'];
+        if ($siteIdentifier && isset(self::$defaultHtmlTemplatePathAndFilename[$siteIdentifier])) {
+            $htmlTemplate = self::$defaultHtmlTemplatePathAndFilename[$siteIdentifier];
+        }
+        $this->setTemplatePathAndFilename($plainTextTemplate, $htmlTemplate);
+
+        $cssFilePath = self::$defaultCssFilePath['all_sites'];
+        if ($siteIdentifier && isset(self::$defaultCssFilePath[$siteIdentifier])) {
+            $cssFilePath = self::$defaultCssFilePath[$siteIdentifier];
+        }
+        $this->setCssFilePath($cssFilePath);
 
         parent::__construct($subject, $body, $contentType, $charset);
     }
@@ -70,11 +91,13 @@ class MailMessage extends \TYPO3\CMS\Core\Mail\MailMessage implements \Psr\Log\L
      *
      * @param string $plainTextAndFilename
      * @param string $htmlPathAndFilename
+     * @param string $limitedToSiteIdentifier
      */
-    public static function setDefaultTemplatePathAndFilename(string $plainTextAndFilename, string $htmlPathAndFilename)
+    public static function setDefaultTemplatePathAndFilename(string $plainTextAndFilename, string $htmlPathAndFilename, string $limitedToSiteIdentifier = '')
     {
-        self::$defaultPlainTextTemplatePathAndFilename = $plainTextAndFilename;
-        self::$defaultHtmlTemplatePathAndFilename = $htmlPathAndFilename;
+        $siteKey = $limitedToSiteIdentifier ? $limitedToSiteIdentifier : 'all_sites';
+        self::$defaultPlainTextTemplatePathAndFilename[$siteKey] = $plainTextAndFilename;
+        self::$defaultHtmlTemplatePathAndFilename[$siteKey] = $htmlPathAndFilename;
     }
 
     /**
@@ -115,11 +138,13 @@ class MailMessage extends \TYPO3\CMS\Core\Mail\MailMessage implements \Psr\Log\L
      * Adds an image file to be embeddable in the fluid view.
      *
      * @param string $embeddableIdentifier Reference string to later identify the embeddable in the template.
-     * @param string $filePath             Original file path.
+     * @param string $filePath                Original file path.
+     * @param string $limitedToSiteIdentifier Site key to limit this as a default embeddable to.
      */
-    public static function addDefaultEmbeddable(string $embeddableIdentifier, string $filePath)
+    public static function addDefaultEmbeddable(string $embeddableIdentifier, string $filePath, string $limitedToSiteIdentifier = '')
     {
-        self::$defaultEmbeddables[$embeddableIdentifier] = $filePath;
+        $siteKey = $limitedToSiteIdentifier ? $limitedToSiteIdentifier : 'all_sites';
+        self::$defaultEmbeddables[$siteKey][$embeddableIdentifier] = $filePath;
     }
 
     /**
@@ -148,10 +173,12 @@ class MailMessage extends \TYPO3\CMS\Core\Mail\MailMessage implements \Psr\Log\L
 
     /**
      * @param string $cssFilePath
+     * @param string $limitedToSiteIdentifier
      */
-    public static function setDefaultCssFilePath(string $cssFilePath)
+    public static function setDefaultCssFilePath(string $cssFilePath, string $limitedToSiteIdentifier = '')
     {
-        self::$defaultCssFilePath = $cssFilePath;
+        $siteKey = $limitedToSiteIdentifier ? $limitedToSiteIdentifier : 'all_sites';
+        self::$defaultCssFilePath[$siteKey] = $cssFilePath;
     }
 
     /**
