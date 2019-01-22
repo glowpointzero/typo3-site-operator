@@ -17,6 +17,7 @@ namespace Glowpointzero\SiteOperator;
 class ProjectInstance
 {
     protected static $sitePackageKey;
+    protected static $siteIdentifier;
     protected static $mainApplicationContext;
     protected static $applicationSubContext;
     protected static $applicationVersion;
@@ -24,9 +25,9 @@ class ProjectInstance
     /**
      * Initialises this class. Should only be done once per request.
      *
-     * @todo Maybe throw an exception, if somebody tries to re-initialize
-     *       this class?
+     * @todo Maybe throw an exception, if somebody tries to re-initialize this class?
      * @param type $sitePackageKey
+     * @throws \Exception
      */
     public static function initialize(
         $sitePackageKey
@@ -40,7 +41,7 @@ class ProjectInstance
         self::$applicationSubContext = $currentSubContext ?: '';
         self::$applicationVersion = self::retrieveApplicationVersion();
     }
-    
+
     /*
      * Returns the site package (extension) key.
      */
@@ -48,7 +49,30 @@ class ProjectInstance
     {
         return self::$sitePackageKey;
     }
-    
+
+    /**
+     * Retrieves current site identifier.
+     * We don't do this in the constructor, as at the time
+     * the ProjectInstance is initialized, there might not
+     * be a TyposcriptFrontendController yet.
+     *
+     * @return string|null
+     * @throws \Exception
+     */
+    public static function getSiteIdentifier()
+    {
+        if (!isset($GLOBALS['TSFE'])) {
+            return null;
+        }
+        if (!$GLOBALS['TSFE']->id) {
+            return null;
+        }
+
+        /** @var \TYPO3\CMS\Core\Site\SiteFinder $siteFinder */
+        $siteFinder = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(\TYPO3\CMS\Core\Site\SiteFinder::class);
+        return $siteFinder->getSiteByPageId($GLOBALS['TSFE']->id)->getIdentifier();
+    }
+
     /**
      * Compares given main and sub context to the current one.
      *
