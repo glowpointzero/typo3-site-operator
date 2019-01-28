@@ -532,6 +532,28 @@ class TcaBuilder implements \Psr\Log\LoggerAwareInterface
     }
 
     /**
+     * @return $this
+     */
+    public function addCategoryColumn($columnName)
+    {
+        $columnConfiguration = [
+            'label' => $this->getColumnLabel($columnName)
+        ];
+
+        \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::makeCategorizable(
+            $this->extensionKey,
+            $this->tableName,
+            $columnName
+        );
+
+        $this->{self::$ITEM_TYPE_COLUMN_PROPERTY}[$columnName] = $columnConfiguration;
+        $this->lastAddedItemIdentifier = $columnName;
+        $this->lastAddedItemProperty = self::$ITEM_TYPE_COLUMN_PROPERTY;
+
+        return $this;
+    }
+
+    /**
      * Adds a select field column to the TCA.
      *
      * @param string $columnName
