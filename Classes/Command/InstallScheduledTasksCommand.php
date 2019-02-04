@@ -174,8 +174,6 @@ class InstallScheduledTasksCommand extends AbstractCommand
      */
     protected function getSameRegisteredTask(AbstractTask $task)
     {
-        /** @var Scheduler $scheduler */
-        $scheduler = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(Scheduler::class);
         $allRegisteredTasks = $this->getAllRegisteredTasks();
         
         /** @var \TYPO3\CMS\Scheduler\Task\AbstractTask $registeredTask */
@@ -185,7 +183,6 @@ class InstallScheduledTasksCommand extends AbstractCommand
             if ($taskClassName !== $task->getTaskClassName()) {
                 continue;
             }
-            
             $identifiesViaProperties = array_key_exists($taskClassName, self::TASK_IDENTIFIER_PROPERTIES);
             if (!$identifiesViaProperties) {
                 return $registeredTask;
@@ -197,7 +194,7 @@ class InstallScheduledTasksCommand extends AbstractCommand
 
             foreach (self::TASK_IDENTIFIER_PROPERTIES[$taskClassName] as $propertyName) {
                 if ($rawTaskProperties[$propertyName] !== $rawRegisteredTaskProperties[$propertyName]) {
-                    return false;
+                    continue 2;
                 }
             }
             
