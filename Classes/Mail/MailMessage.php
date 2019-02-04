@@ -225,12 +225,16 @@ class MailMessage extends \TYPO3\CMS\Core\Mail\MailMessage implements \Psr\Log\L
        if ($contentType === 'text/plain') {
            $this->setPlainTextContent($body);
            $this->setHtmlContent($this->getHtmlContentFromText($body));
+           return $this;
        }
        if ($contentType === 'text/html') {
            $this->setHtmlContent($body);
            $this->setPlainTextContent($this->getPlainTextContentFromHtml($body));
+           return $this;
        }
 
+       // Any other content type than text/html and text/plain will be added
+       // as-is. :)
        return $this->addPart($body, $contentType, $charset);
    }
 
