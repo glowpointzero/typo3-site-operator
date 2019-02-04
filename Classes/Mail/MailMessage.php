@@ -202,7 +202,10 @@ class MailMessage extends \TYPO3\CMS\Core\Mail\MailMessage implements \Psr\Log\L
     }
 
     /**
-     * 'setBody' override. Automatically
+     * 'setBody' override, automagically detecting whether
+     * this instance is prepared to be rendered via Fluid
+     * and, secondly, also detecting whether the given
+     * content is plain text or HTML.
      *
      * @param mixed $body
      * @param null $contentType
@@ -228,7 +231,7 @@ class MailMessage extends \TYPO3\CMS\Core\Mail\MailMessage implements \Psr\Log\L
            $this->setPlainTextContent($this->getPlainTextContentFromHtml($body));
        }
 
-       return parent::setBody($body, $contentType, $charset);
+       return $this->addPart($body, $contentType, $charset);
    }
 
     /**
@@ -366,13 +369,12 @@ class MailMessage extends \TYPO3\CMS\Core\Mail\MailMessage implements \Psr\Log\L
         /** @var \TYPO3\CMS\Fluid\View\StandaloneView $emailTextView */
         $emailTextView = GeneralUtility::makeInstance(\TYPO3\CMS\Fluid\View\StandaloneView::class);
         $emailTextView->setTemplatePathAndFilename(GeneralUtility::getFileAbsFileName($this->plainTextPathAndFilename));
-        $emailTextView->assign('content', $this->plainTextContent);
+        $emailTextView->assignMultiple([
+            'subject' => $this->getSubject(),
+            'content' => $this->plainTextContent
+        ]);
 
-        // Explicitly use the parent 'setBody' method here as we don't
-        // want and need to go through the whole html vs. text processing
-        // of our implementation here once again. We should have everything
-        // ready in $this->plainTextContent already.
-        parent::setBody($emailTextView->render(), 'text/plain');
+        parent::addPart($emailTextView->render(), 'text/plain');
 
         /** @var \TYPO3\CMS\Fluid\View\StandaloneView $emailHtmlView */
         $emailHtmlView = GeneralUtility::makeInstance(\TYPO3\CMS\Fluid\View\StandaloneView::class);
