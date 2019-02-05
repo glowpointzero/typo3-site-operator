@@ -238,8 +238,7 @@ class GenerateStaticResourcesCommand extends AbstractCommand
         
         $placeholderValues = [
             'siteConfiguration' => $this->siteConfigurations,
-            'constants' => $this->configuration['constants'],
-            'applicationVersion' => \Glowpointzero\SiteOperator\ProjectInstance::getApplicationVersion(),
+            'constants' => $this->configuration['constants']
         ];
         $targetContents = \Glowpointzero\SiteOperator\Utility\StringUtility::replacePlaceholders(
             $sourceContents,
