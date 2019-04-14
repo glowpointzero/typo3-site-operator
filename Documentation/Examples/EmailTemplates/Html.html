@@ -1,0 +1,26 @@
+<html data-namespace-typo3-fluid="true"
+      xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers">
+
+<f:if condition="{css}">
+    <style type="text/css">
+        {css}
+    </style>
+</f:if>
+<br /><br />
+<table id="main">
+    <tr>
+        <td>&nbsp;</td>
+        <td id="content">
+            <f:if condition="{embeddables.logo}">
+                <div id="logo">
+                    <img src="{embeddables.logo}" />
+                </div>
+            </f:if>
+            <h1>{subject}</h1>
+            {content -> f:format.raw()}
+        </td>
+        <td>&nbsp;</td>
+    </tr>
+</table>
+
+</html>

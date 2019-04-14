@@ -19,9 +19,22 @@ use Glowpointzero\SiteOperator\ProjectInstance;
 
 class FileSystemUtility
 {
-    
     /**
-     * 
+     * Returns the path to a given file that may have multiple
+     * versions for different application contexts.
+     *
+     * EXT:my_extension/Configuration/TypoScript/constants.typoscript
+     * may also exist as constants.development.typoscript, or - even more specific -
+     * as constants.development.staging.typoscript. This method will find
+     * the correct version and return its path, relying on a initialized
+     * 'ProjectInstance'.
+     *
+     * Example:
+     * - We're in the Application context 'Production'
+     * - getContextDependentFilePath('fileadmin', 'test', 'txt')
+     * Returns: 'fileadmin/test.production.txt', if it exists,
+     * 'test.txt' otherwise.
+     *
      * @param string $directory
      * @param string $fileName
      * @param string $fileSuffix

@@ -14,9 +14,6 @@ namespace Glowpointzero\SiteOperator\Utility;
  * The TYPO3 project - inspiring people to share!
  */
 
-use TYPO3\CMS\Core\Utility\GeneralUtility;
-use Glowpointzero\SiteOperator\ProjectInstance;
-
 class StringUtility
 {
     
@@ -25,11 +22,15 @@ class StringUtility
      *
      * @var string $inputString
      * @var array $nestedValues
+     * @var string $matchingPattern
      * @return string
      */
-    public static function replacePlaceholders($inputString, $nestedValues)
+    public static function replacePlaceholders(
+        string $inputString,
+        array $nestedValues,
+        $matchingPattern = '/\[\[typo3-site-operator:([^\]]+)\]\]/')
     {
-        preg_match_all('/\[\[typo3-site-operator:([^\]]+)\]\]/', $inputString, $matches);
+        preg_match_all($matchingPattern, $inputString, $matches);
         foreach ($matches[1] as $matchNumber => $match) {
             $nestedValueSegments = explode('/', $match);
             $nestedValue = ArrayUtility::getNestedArrayValue($nestedValues, $nestedValueSegments) ?: '';
