@@ -4,9 +4,6 @@
 
   "license": ["GPL-2.0+"],
   "type": "typo3-cms-extension",
-  "replace": {
-    "site_operator": "*"
-  },
   "authors": [
     {
       "name": "Manuel Glauser",
@@ -26,6 +23,11 @@
   "autoload-dev": {
     "psr-4": {
       "Glowpointzero\\SiteOperator\\Tests\\": "Tests/"
+    }
+  },
+  "extra": {
+    "typo3/cms": {
+      "extension-key": "site_operator"
     }
   }
 }
