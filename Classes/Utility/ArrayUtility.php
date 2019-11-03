@@ -14,9 +14,6 @@ namespace Glowpointzero\SiteOperator\Utility;
  * The TYPO3 project - inspiring people to share!
  */
 
-use TYPO3\CMS\Core\Utility\GeneralUtility;
-use Glowpointzero\SiteOperator\ProjectInstance;
-
 class ArrayUtility
 {
     
@@ -25,9 +22,11 @@ class ArrayUtility
      * array, given the names / index of every node to
      * traverse.
      *
-     * @return mixed
+     * @param array $inputArray
+     * @param array $pathSegments
+     * @return array|mixed|null
      */
-    public static function getNestedArrayValue(array $inputArray, $pathSegments)
+    public static function getNestedArrayValue(array $inputArray, array $pathSegments)
     {
         $detectedValue = $inputArray;
         foreach ($pathSegments as $pathSegment) {

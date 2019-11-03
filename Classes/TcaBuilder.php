@@ -208,6 +208,36 @@ class TcaBuilder implements \Psr\Log\LoggerAwareInterface
     }
 
     /**
+     * Sets the column name to use as a record 'start time' indicator.
+     *
+     * @param $columnName
+     * @return $this
+     */
+    public function setStartTimeColumnName($columnName)
+    {
+        if (!is_array($this->ctrl['enablecolumns'])) {
+            $this->ctrl['enablecolumns'] = [];
+        }
+        $this->ctrl['enablecolumns']['starttime'] = $columnName;
+        return $this;
+    }
+
+    /**
+     * Sets the column name to use as a record 'end time' indicator.
+     *
+     * @param $columnName
+     * @return $this
+     */
+    public function setEndTimeColumnName($columnName)
+    {
+        if (!is_array($this->ctrl['enablecolumns'])) {
+            $this->ctrl['enablecolumns'] = [];
+        }
+        $this->ctrl['enablecolumns']['endtime'] = $columnName;
+        return $this;
+    }
+
+    /**
      * Sets the column name that will contain the user id of the user
      * that created the record.
      *
@@ -736,7 +766,6 @@ class TcaBuilder implements \Psr\Log\LoggerAwareInterface
                 $generatedShowItems[] = $this->generateShowItem([], [], [$itemId]);
                 continue;
             }
-
         }
 
         $this->recordTypes[$typeId] = [

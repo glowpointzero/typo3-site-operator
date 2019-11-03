@@ -4,6 +4,7 @@ namespace Glowpointzero\SiteOperator\Command;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Extbase\Object\ObjectManager;
 use TYPO3\CMS\Core\Core\Environment;
 
@@ -111,6 +112,7 @@ class AbstractCommand extends Command
     protected function loadConfiguration()
     {
         $possibleConfigurationPaths = [
+            Environment::getConfigPath() . '/typo3-site-operator/config.json',
             Environment::getConfigPath() . '/typo3-site-operator.json',
             './typo3-site-operator.json',
             Environment::getLegacyConfigPath() . '/typo3-site-operator.json'
@@ -130,6 +132,17 @@ class AbstractCommand extends Command
                     implode(', ', $possibleConfigurationPaths)
                 )
             );
+            $createDefault = $this->io->confirm(
+                sprintf('Create default as an example in %s?', $possibleConfigurationPaths[0]),
+                false
+            );
+            if ($createDefault) {
+                $this->fileSystem->copy(
+                    ExtensionManagementUtility::extPath('site_operator', 'Configuration/default-config.json'),
+                    $possibleConfigurationPaths[0]
+                );
+                $this->io->comment('Done. Please run this command again to retry.');
+            }
             return false;
         }
         
@@ -148,7 +161,7 @@ class AbstractCommand extends Command
             $this->io->warning(
                 sprintf(
                     'The configuration (%s) doesn\'t contain a "constants" section.'
-                    . ' This will most probably at some point. Fix it - or don\'t.',
+                    . ' This will most probably be needed at some point. Fix it - or don\'t.',
                     $configurationFile
                 )
             );
@@ -166,7 +179,7 @@ class AbstractCommand extends Command
      */
     protected function validateConfigurationForTheCurrentCommand()
     {
-        // This should be implemented in the concreate (non-abstract) command classes
+        // This should be implemented in the concrete (non-abstract) command classes
         
         return true;
     }

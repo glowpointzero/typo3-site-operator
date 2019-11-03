@@ -1,0 +1,33 @@
+{
+  "constants": {
+    "colorPalette": {
+      "primaryColor": {
+        "hex": "#500000"
+      },
+      "darkerPrimaryColor": {
+        "hex": "#380000"
+      }
+    }
+  },
+  "scheduledTasksSourcePaths": [
+    "config/ScheduledTasks.php"
+  ],
+  "generatedResources": {
+    "web/typo3conf/ext/my_site_package/Configuration/TypoScript/_generated/constants.typoscript": {
+      "generator": "text",
+      "configuration": {
+        "source": "web/typo3conf/ext/my_site_package/Configuration/TypoScript/_generated/constants.typoscript.dist"
+      }
+    },
+    "web/typo3conf/ext/my_site_package/Resources/Public/Images/_generated/favicon-site-a.ico": {
+      "generator": "image",
+      "configuration": {
+        "source": "web/typo3conf/ext/my_site_package/Resources/Public/Images/favicon-site-a.svg",
+        "parameters": {
+          "colorspace": "sRGB",
+          "define": "icon:auto-resize"
+        }
+      }
+    }
+  }
+}
