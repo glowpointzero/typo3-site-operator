@@ -1,6 +1,7 @@
 <?php
 namespace Glowpointzero\SiteOperator\Command;
 
+use Glowpointzero\SiteOperator\Utility\FileSystemUtility;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -122,6 +123,7 @@ class AbstractCommand extends Command
         foreach ($possibleConfigurationPaths as $configurationPath) {
             if ($this->fileSystem->exists($configurationPath)) {
                 $configurationFile = $configurationPath;
+                $this->configurationFilePath = $configurationFile;
                 break;
             }
         }
@@ -146,6 +148,36 @@ class AbstractCommand extends Command
             return false;
         }
         
+        $configuration = $this->loadConfigurationFile($configurationFile);
+        if (!is_array($configuration)) {
+            return false;
+        }
+
+        $configuration = $this->resolveConfigurationIncludes($configuration, dirname($configurationFile));
+
+        if (!isset($configuration['constants']) || !is_array($configuration['constants']) || empty($configuration['constants'])) {
+            $this->io->warning(
+                sprintf(
+                    'The configuration (%s) doesn\'t contain a "constants" section.'
+                    . ' This will most probably be needed at some point. Fix it - or don\'t.',
+                    $configurationFile
+                )
+            );
+        }
+
+        $this->configuration = array_merge_recursive($this->configuration, $configuration);
+        
+        return true;
+    }
+
+    /**
+     * Loads a single site operator configuration file.
+     *
+     * @param $configurationFile
+     * @return bool|array
+     */
+    protected function loadConfigurationFile($configurationFile)
+    {
         $configuration = json_decode(file_get_contents($configurationFile), true);
         if (!is_array($configuration)) {
             $this->io->error(
@@ -156,21 +188,44 @@ class AbstractCommand extends Command
             );
             return false;
         }
-        
-        if (!isset($configuration['constants']) || !is_array($configuration['constants']) || empty($configuration['constants'])) {
-            $this->io->warning(
-                sprintf(
-                    'The configuration (%s) doesn\'t contain a "constants" section.'
-                    . ' This will most probably be needed at some point. Fix it - or don\'t.',
-                    $configurationFile
-                )
-            );
+        return $configuration;
+    }
+
+    /**
+     * Recursively resolves the 'includes' portion of the
+     * included configuration file(s).
+     *
+     * @param array $configuration
+     * @param string $mainConfigFilePath
+     * @return array
+     */
+    protected function resolveConfigurationIncludes(array $configuration, string $mainConfigFilePath)
+    {
+        if (!isset($configuration['includes']) || !is_array($configuration['includes'])) {
+            return $configuration;
         }
-        
-        $this->configurationFilePath;
-        $this->configuration = array_merge_recursive($this->configuration, $configuration);
-        
-        return true;
+
+        foreach ($configuration['includes'] as $includeFilePath) {
+
+            $resolvedFilePath = FileSystemUtility::resolvePath($includeFilePath, $mainConfigFilePath);
+
+            if (!$resolvedFilePath) {
+                $this->io->error(sprintf(
+                    'The config file "%s" referenced in the "includes" section in %s'
+                    . ' could not be found/resolved.',
+                    $includeFilePath,
+                    $mainConfigFilePath
+                ));
+                continue;
+            }
+            $includedConfiguration = $this->loadConfigurationFile($resolvedFilePath);
+            if (!$includedConfiguration) {
+                continue;
+            }
+            $configuration = array_merge_recursive($configuration, $includedConfiguration);
+        }
+
+        return $configuration;
     }
     
     /**

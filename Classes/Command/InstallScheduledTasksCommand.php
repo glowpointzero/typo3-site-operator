@@ -1,6 +1,7 @@
 <?php
 namespace Glowpointzero\SiteOperator\Command;
 
+use Glowpointzero\SiteOperator\Utility\FileSystemUtility;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use TYPO3\CMS\Scheduler\Scheduler;
@@ -84,21 +85,21 @@ class InstallScheduledTasksCommand extends AbstractCommand
         $configuredTasks = [];
         
         foreach ($this->configuration['scheduledTasksSourcePaths'] as $taskSourceFilePath) {
-            $this->io->comment(sprintf('Reading tasks from %s', $taskSourceFilePath));
-            if (!$this->fileSystem->exists($taskSourceFilePath)) {
+            $taskSourceFileAbsolute = FileSystemUtility::resolvePath($taskSourceFilePath, $this->configurationFilePath);
+            if (!$taskSourceFileAbsolute) {
                 $this->io->error(sprintf('Scheduled tasks file %s does not exist.', $taskSourceFilePath));
                 continue;
             }
-            
-            $newTasks = include $taskSourceFilePath;
+
+            $newTasks = include $taskSourceFileAbsolute;
             if (!is_array($newTasks)) {
-                $this->io->error(sprintf('Scheduled tasks file %s does not return an array.', $taskSourceFilePath));
+                $this->io->error(sprintf('Scheduled tasks file %s does not return an array.', $taskSourceFileAbsolute));
                 continue;
             }
             $configuredTasks = array_merge($configuredTasks, $newTasks);
         }
         
-        if (count($this->configuration['scheduledTasksSourcePaths']) > 0 && count($tasks) === 0) {
+        if (count($this->configuration['scheduledTasksSourcePaths']) > 0 && count($configuredTasks) === 0) {
             $this->io->caution(
                 sprintf(
                     'No tasks found in any of the referenced files (%s).',
@@ -136,10 +137,10 @@ class InstallScheduledTasksCommand extends AbstractCommand
                 sleep(0.5);
                 continue;
             }
-                        
+
             $this->io->comment('Registering task "' . $task->getTaskClassName() . '"');
             sleep(0.5);
-            
+
             $similarTask = $this->getSameRegisteredTask($task);
             
             if ($similarTask instanceof AbstractTask) {

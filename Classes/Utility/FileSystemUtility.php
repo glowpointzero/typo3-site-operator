@@ -14,6 +14,7 @@ namespace Glowpointzero\SiteOperator\Utility;
  * The TYPO3 project - inspiring people to share!
  */
 
+use Symfony\Component\Filesystem\Filesystem;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use Glowpointzero\SiteOperator\ProjectInstance;
 
@@ -67,5 +68,38 @@ class FileSystemUtility
         }
         
         return false;        
+    }
+
+    /**
+     * Resolves a relative path to its absolute counterpart.
+     *
+     * The 'base' given may point to a directory or file
+     * that acts as a starting point to resolve the relative
+     * path given.
+     *
+     * @param string $relativePath
+     * @param string $base
+     * @return bool|string
+     */
+    public static function resolvePath(string $relativePath, string $base)
+    {
+        $fileSystem = new Filesystem();
+        $givenPathIsAbsolute = $fileSystem->isAbsolutePath($relativePath);
+        if ($givenPathIsAbsolute && $fileSystem->exists($relativePath)) {
+            return $relativePath;
+        }
+        if ($givenPathIsAbsolute && !$fileSystem->exists($relativePath)) {
+            return false;
+        }
+        $baseExists = $fileSystem->exists($base);
+        $baseIsFile = is_file($base);
+        if ($baseExists && $baseIsFile) {
+            $base = dirname($base);
+        }
+        $resolvedPath = realpath($base . '/' . $relativePath);
+        if (!$resolvedPath) {
+            return false;
+        }
+        return $resolvedPath;
     }
 }
