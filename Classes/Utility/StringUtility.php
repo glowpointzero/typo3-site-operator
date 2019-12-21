@@ -38,4 +38,50 @@ class StringUtility
         }
         return $inputString;
     }
+
+    /**
+     * A simple comparison method allowing for the second
+     * argument to be a pattern. Plus, this method is
+     * case-insensitive by default.
+     *
+     * @param string $string
+     * @param string $pattern
+     * @param bool $ignoreCase
+     * @return bool
+     */
+    public static function stringsMatch(string $string, string $pattern, bool $ignoreCase = true)
+    {
+        $useRegex = substr($pattern, 0, 1) === '/' && substr_count($pattern, '/') > 1;
+
+        if ($useRegex && preg_match($pattern, $string)) {
+            return true;
+        }
+
+        if ($ignoreCase) {
+            $string = strtolower($string);
+            $pattern = strtolower($pattern);
+        }
+
+        if (!$useRegex && $string === $pattern) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * @param string $originalString
+     * @param int $maximumStringLength
+     * @param string $suffix
+     * @return string
+     */
+    public static function createExcerpt(string $originalString, int $maximumStringLength = 30, string $suffix = ' (...)')
+    {
+        if (strlen($originalString) <= $maximumStringLength) {
+            return $originalString;
+        }
+        $excerpt = substr($originalString, 0, $maximumStringLength-strlen($suffix)) . $suffix;
+
+        return $excerpt;
+    }
 }
