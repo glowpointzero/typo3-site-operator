@@ -1,6 +1,7 @@
 <?php
 namespace Glowpointzero\SiteOperator\SiteCheckup\Processors;
 
+use Glowpointzero\SiteOperator\Command\AbstractCommand;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 class SitemapProcessor extends HttpResponseProcessor {
@@ -10,18 +11,21 @@ class SitemapProcessor extends HttpResponseProcessor {
      */
     public function run()
     {
-        foreach ($this->generateUrlsBySitesAndLanguages($this->getArgument('location')) as $url) {
-            $this->io->comment(sprintf('Check sitemap located under %s.', $url));
+        foreach ($this->generateUrlsBySitesAndLanguages($this->getArgument('location')) as $sitemapUrl) {
 
-            $xml = $this->loadUrlAsXML($url);
+            if ($this->io->isVerbose()) {
+                $this->io->startProcess(sprintf('Sitemap validation for "%s"', $sitemapUrl), 1);
+            }
+
+            $xml = $this->loadUrlAsXML($sitemapUrl);
             if (!$xml) {
-                $this->io->error('Could not load contents as xml.');
+                $this->messageCollector->addError('Could not load contents as xml.');
                 continue;
             }
 
+            $numberOrUrls = 0;
             $sitemapsXMLs = $this->resolveSitemapUrls($xml);
             foreach ($sitemapsXMLs as $sitemap) {
-                $numberOrUrls = 0;
                 foreach ($sitemap->url as $url) {
                     if (parse_url($url)) {
                         $numberOrUrls++;
@@ -30,12 +34,31 @@ class SitemapProcessor extends HttpResponseProcessor {
             }
 
             if ($numberOrUrls === 0) {
-                $this->io->error('No urls found.');
+                $this->messageCollector->addError('No urls found.');
+                if ($this->io->isVerbose()) {
+                    $this->io->endProcess('', AbstractCommand::STATUS_ERROR);
+                }
                 continue;
             }
-            $this->io->success(sprintf('%s urls detected.', $numberOrUrls));
+            if ($numberOrUrls < 5) {
+                $this->messageCollector->addWarning(sprintf(
+                    'Only %s urls found resolving "%s" (this might be ok, but usually, there are more than 5).',
+                    $numberOrUrls,
+                    $sitemapUrl
+                ));
+                if ($this->io->isVerbose()) {
+                    $this->io->endProcess('', AbstractCommand::STATUS_WARNING);
+                }
+                continue;
+            }
+
+            if ($this->io->isVerbose()) {
+                $this->io->endProcess(sprintf('%s URLs', $numberOrUrls), AbstractCommand::STATUS_SUCCESS);
+            }
         }
-        return true;
+
+        $endStatus = $this->messageCollector->getMostSevereMessageLevel() ?: AbstractCommand::STATUS_SUCCESS;
+        return $endStatus;
     }
 
     /**

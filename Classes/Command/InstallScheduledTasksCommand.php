@@ -117,7 +117,7 @@ class InstallScheduledTasksCommand extends AbstractCommand
      */
     protected function registerScheduledTasks(array $tasks)
     {        
-        $this->io->comment(sprintf('Registering %s scheduled tasks...', count($tasks)));
+        $this->io->note(sprintf('Registering %s scheduled tasks...', count($tasks)));
                 
         /** @var Scheduler $scheduler */
         $scheduler = $this->objectManager->get(Scheduler::class);
@@ -138,13 +138,13 @@ class InstallScheduledTasksCommand extends AbstractCommand
                 continue;
             }
 
-            $this->io->comment('Registering task "' . $task->getTaskClassName() . '"');
+            $this->io->note('Registering task "' . $task->getTaskClassName() . '"');
             sleep(0.5);
 
             $similarTask = $this->getSameRegisteredTask($task);
             
             if ($similarTask instanceof AbstractTask) {
-                $this->io->comment(
+                $this->io->notice(
                     sprintf('A task like this is already registered (uid %s)', $similarTask->getTaskUid())
                 );
                 continue;

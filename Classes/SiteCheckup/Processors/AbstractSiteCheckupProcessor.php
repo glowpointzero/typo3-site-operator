@@ -1,11 +1,10 @@
 <?php
 namespace Glowpointzero\SiteOperator\SiteCheckup\Processors;
 
-use Glowpointzero\SiteOperator\Utility\ArrayUtility;
-use PhpParser\Node\Expr\Instanceof_;
+use Glowpointzero\SiteOperator\Console\MessageCollector;
+use Glowpointzero\SiteOperator\Console\SymfonyStyle;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Style\SymfonyStyle;
-use TYPO3\CMS\Backend\Middleware\SiteResolver;
+use TYPO3\CMS\Core\Site\Entity\SiteLanguage;
 use TYPO3\CMS\Core\Site\SiteFinder;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
@@ -22,6 +21,11 @@ abstract class AbstractSiteCheckupProcessor implements SiteCheckupProcessorInter
     protected $configuration = [];
 
     /**
+     * @var bool
+     */
+    protected $requiresSitesAndLanguages = true;
+
+    /**
      * @var InputInterface
      */
     protected $inputInterface;
@@ -30,6 +34,11 @@ abstract class AbstractSiteCheckupProcessor implements SiteCheckupProcessorInter
      * @var SymfonyStyle
      */
     protected $io;
+
+    /**
+     * @var MessageCollector
+     */
+    protected $messageCollector;
 
     /**
      * @var array
@@ -75,6 +84,14 @@ abstract class AbstractSiteCheckupProcessor implements SiteCheckupProcessorInter
     }
 
     /**
+     * @param MessageCollector $messageCollector
+     */
+    public function setMessageCollector(MessageCollector &$messageCollector)
+    {
+        $this->messageCollector = $messageCollector;
+    }
+
+    /**
      * Resolves a list of sites that will be affected/checked
      * by the current processor. May or may not be used,
      * depending on the processor. Interprets the 'sites'
@@ -82,6 +99,9 @@ abstract class AbstractSiteCheckupProcessor implements SiteCheckupProcessorInter
      */
     public function detectAndSetAffectedSitesAndLanguages()
     {
+        if (!$this->requiresSitesAndLanguages) {
+            return;
+        }
         /** @var SiteFinder $siteFinder */
         $siteFinder = GeneralUtility::makeInstance(SiteFinder::class);
         $this->affectedSites = $siteFinder->getAllSites();
@@ -91,12 +111,15 @@ abstract class AbstractSiteCheckupProcessor implements SiteCheckupProcessorInter
             foreach ($this->configuration['sitesAndLanguages'] as $siteIdentifier => $languageUids) {
                 $site = $siteFinder->getSiteByIdentifier($siteIdentifier);
                 $this->affectedSites[$siteIdentifier] = $site;
+
                 $affectedLanguages = [];
                 foreach ($site->getAllLanguages() as $language) {
-                    if (in_array($language->getLanguageId(), $languageUids)) {
+                    if (in_array($language->getLanguageId(), $languageUids) || count($languageUids) === 0) {
                         $affectedLanguages[] = $language;
+                        $affectedLanguagesStrings[] = sprintf('%s (%s)', $language->getTitle(), $language->getLanguageId());
                     }
                 }
+
                 $this->affectedLanguagesBySite[$siteIdentifier] = $affectedLanguages;
             }
         }
@@ -107,6 +130,15 @@ abstract class AbstractSiteCheckupProcessor implements SiteCheckupProcessorInter
             }
             if (count($this->affectedLanguagesBySite[$siteIdentifier]) === 0) {
                 $this->affectedLanguagesBySite[$siteIdentifier] = $site->getAllLanguages();
+            }
+
+            if ($this->io->isVerbose()) {
+                $this->io->abortCurrentProcess();
+                $this->io->say(sprintf('Checkup will run for the site "%s" in these languages:', $siteIdentifier), null, 1);
+                /** @var SiteLanguage $language */
+                foreach ($this->affectedLanguagesBySite[$siteIdentifier] as $language) {
+                    $this->io->say(sprintf('%s (%s)', $language->getTitle(), $language->getLanguageId()), null, 2);
+                }
             }
         }
     }

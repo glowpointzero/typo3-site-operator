@@ -83,11 +83,11 @@ class GenerateStaticResourcesCommand extends AbstractCommand
             return;
         }
         
-        $this->io->comment(sprintf('Generating %s static resources...', count($this->configuration['generatedResources'])));
+        $this->io->note(sprintf('Generating %s static resources...', count($this->configuration['generatedResources'])));
         
         foreach ($this->configuration['generatedResources'] as $resourceTargetPath => $generatorConfiguration)
         {
-            $this->io->comment(sprintf('Generating %s...', $resourceTargetPath));
+            $this->io->note(sprintf('Generating %s...', $resourceTargetPath));
             $sourcePath = './' . $generatorConfiguration['configuration']['source'];
             $fileExists = $this->fileSystem->exists($resourceTargetPath);
             $fileIsOutdated = true;
@@ -97,7 +97,7 @@ class GenerateStaticResourcesCommand extends AbstractCommand
             }
 
             if (!$fileIsOutdated && $input->getOption('outdated')) {
-                $this->io->comment(
+                $this->io->notice(
                     sprintf(
                         'Skipping, as the target file seems up-to-date (last updated on %s. Source File: %s).',
                         date('d.m.Y H:i', filemtime($resourceTargetPath)),
@@ -206,7 +206,7 @@ class GenerateStaticResourcesCommand extends AbstractCommand
         $returnValue = exec($command);
         
         if (!empty($returnValue)) {
-            $this->io->comment($returnValue); // This should usually be empty.
+            $this->io->notice($returnValue); // This should usually be empty.
         }
         
         if (!$this->fileSystem->exists($tempTargetFile) || filesize($tempTargetFile) === 0) {

@@ -1,6 +1,7 @@
 <?php
 namespace Glowpointzero\SiteOperator\Command;
 
+use Glowpointzero\SiteOperator\Console\SymfonyStyle;
 use Glowpointzero\SiteOperator\Utility\FileSystemUtility;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -15,20 +16,21 @@ class AbstractCommand extends Command
     
     const CONFIGURATION_REQUIRED = true;
     const TYPO3_CORE_REQUIRED = true;
+
+    const STATUS_OK = 0;
+    const STATUS_SUCCESS = 1;
+    const STATUS_INFO = 2;
+    const STATUS_NOTICE = 3;
+    const STATUS_WARNING = 4;
+    const STATUS_ERROR = 5;
     
     /**
      * @var ObjectManager
      */
     protected $objectManager;
-    
-    /**
-     *
-     * @var Environment
-     */
-    protected $environment;
 
     /**
-     * @var \Symfony\Component\Console\Style\SymfonyStyle
+     * @var SymfonyStyle
      */
     protected $io;
 
@@ -59,8 +61,10 @@ class AbstractCommand extends Command
     public function initialize(InputInterface $input, OutputInterface $output)
     {
         $this->objectManager = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(ObjectManager::class);
-        $this->io = new \Symfony\Component\Console\Style\SymfonyStyle($input, $output);
+
+        $this->io = new SymfonyStyle($input, $output);
         $this->io->note('Running ' . $this->getName() . ' ...');
+
         $this->fileSystem = new \Symfony\Component\Filesystem\Filesystem();
         
         if ($this::TYPO3_CORE_REQUIRED && !$this->typo3CoreIsAvailable()) {
@@ -143,7 +147,7 @@ class AbstractCommand extends Command
                     ExtensionManagementUtility::extPath('site_operator', 'Configuration/default-config.json'),
                     $possibleConfigurationPaths[0]
                 );
-                $this->io->comment('Done. Please run this command again to retry.');
+                $this->io->notice('Done. Please run this command again to retry.');
             }
             return false;
         }

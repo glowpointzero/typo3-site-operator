@@ -1,10 +1,16 @@
 <?php
 namespace Glowpointzero\SiteOperator\SiteCheckup\Processors;
 
+use Glowpointzero\SiteOperator\Command\AbstractCommand;
 use Glowpointzero\SiteOperator\Utility\ArrayUtility;
 use Glowpointzero\SiteOperator\Utility\StringUtility;
 
 class VariableProcessor extends AbstractSiteCheckupProcessor implements CriteriaMatcherInterface {
+
+    /**
+     * {@inheritdoc}
+     */
+    protected $requiresSitesAndLanguages = false;
 
     /**
      * {@inheritdoc}
@@ -22,17 +28,18 @@ class VariableProcessor extends AbstractSiteCheckupProcessor implements Criteria
             $failedCriterionValue,
             $failedCriterionComparedContent
         );
+
         if (!$criteriaMatches) {
-            $this->io->error(sprintf(
-                'Failed. Criteria "%s" (%s) was not fulfilled by the value checked (%s).',
-                $failedCriterionName,
+            $this->messageCollector->addError(sprintf(
+                'The value (%s) gotten from the variable "%s" did not match the defined criteria ("%s").',
                 $failedCriterionValue,
+                $failedCriterionName,
                 $failedCriterionComparedContent
             ));
-            return false;
+            return AbstractCommand::STATUS_ERROR;
         }
 
-        return true;
+        return AbstractCommand::STATUS_SUCCESS;
     }
 
     /**
@@ -45,8 +52,12 @@ class VariableProcessor extends AbstractSiteCheckupProcessor implements Criteria
         string &$failedCriterionValue = null,
         string &$failedCriterionComparisonValue = null
     ) {
-        foreach ($successCriteria as $criteriaGroup)
+        foreach ($successCriteria as $criteriaGroupIndex => $criteriaGroup)
         {
+            if ($this->io->isVerbose()) {
+                $this->io->startProcess(sprintf('Checking variables in group %s', $criteriaGroupIndex), 1);
+            }
+
             $criteriaGroupMatches = false;
             foreach ($criteriaGroup as $variablePath => $expectedVariableValue) {
                 $explodedVariablePath = explode('|', $variablePath);
@@ -73,6 +84,12 @@ class VariableProcessor extends AbstractSiteCheckupProcessor implements Criteria
                 $failedCriterionComparisonValue = '';
                 $criteriaGroupMatches = true;
                 break;
+            }
+
+            if ($this->io->isVerbose()) {
+                $messageSeverity = $criteriaGroupMatches ? AbstractCommand::STATUS_SUCCESS : AbstractCommand::STATUS_ERROR;
+                $message = $criteriaGroupMatches ? '' : sprintf('%s failed', $failedCriterionName);
+                $this->io->endProcess($message, $messageSeverity);
             }
 
             if (!$criteriaGroupMatches) {

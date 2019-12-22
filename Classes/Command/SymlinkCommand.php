@@ -55,7 +55,7 @@ class SymlinkCommand extends AbstractCommand
      */
     protected function processSymlink(string $symlinkTarget, array $symlinkConfiguration, bool $overrideExisting)
     {
-        $this->io->comment(sprintf('Setting up symlink %s', $symlinkTarget));
+        $this->io->info(sprintf('Setting up symlink %s', $symlinkTarget));
 
         $targetExists = $this->fileSystem->exists($symlinkTarget);
 

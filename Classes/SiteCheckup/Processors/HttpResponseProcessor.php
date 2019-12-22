@@ -1,6 +1,7 @@
 <?php
 namespace Glowpointzero\SiteOperator\SiteCheckup\Processors;
 
+use Glowpointzero\SiteOperator\Command\AbstractCommand;
 use Glowpointzero\SiteOperator\Utility\StringUtility;
 use GuzzleHttp\Psr7\Response;
 use TYPO3\CMS\Core\Site\Entity\Site;
@@ -20,7 +21,8 @@ class HttpResponseProcessor extends AbstractSiteCheckupProcessor implements Crit
          */
         foreach ($this->generateUrlsBySitesAndLanguages($this->getArgument('location')) as $url) {
 
-            $this->io->comment(sprintf('Loading url "%s"... ', $url));
+            $this->io->sayVerbosely(sprintf('Response validation for url "%s"', $url), null, 1);
+
             $report = [];
 
             $content = GeneralUtility::getUrl($url, 1, null, $report);
@@ -53,16 +55,20 @@ class HttpResponseProcessor extends AbstractSiteCheckupProcessor implements Crit
             );
 
             if (!$criteriaMatches) {
-                $this->io->error(sprintf(
-                    'Failed. Criteria "%s" (%s) was not fulfilled by the value checked (%s).',
-                    $failedCriterionName,
-                    $failedCriterionValue,
-                    $failedCriterionComparedContent
-                ));
+                $this->messageCollector->addError(
+                    sprintf(
+                        'The value checked (%s) did not match the "%s" criterion (which is set to "%s").',
+                        $failedCriterionValue,
+                        $failedCriterionName,
+                        $failedCriterionComparedContent
+                    )
+                );
                 continue;
             }
         }
-        return true;
+
+        $severity = $this->messageCollector->getMostSevereMessageLevel() ?: AbstractCommand::STATUS_SUCCESS;
+        return $severity;
     }
 
     /**
@@ -95,17 +101,39 @@ class HttpResponseProcessor extends AbstractSiteCheckupProcessor implements Crit
         {
             $statusCodeMatches = false;
             if (isset($criterion['statusCode'])) {
+
                 $statusCodeMatches = StringUtility::stringsMatch($contents['statusCode'], $criterion['statusCode']);
+
+                if ($this->io->isVerbose()) {
+                    $this->io->startProcess(sprintf('Status code (expected "%s")', $criterion['statusCode']), 2);
+                    $processEndStatus = $statusCodeMatches ? AbstractCommand::STATUS_SUCCESS : AbstractCommand::STATUS_ERROR;
+                    $this->io->endProcess('', $processEndStatus);
+                }
+
                 if (!$statusCodeMatches) {
                     $failedCriterionName = 'statusCode';
                     $failedCriterionValue =  $criterion['statusCode'];
                     $failedCriterionComparisonValue = $contents['statusCode'];
+
                 }
             }
 
             $contentMatches = false;
             if (isset($criterion['content'])) {
                 $contentMatches = StringUtility::stringsMatch($contents['content'], $criterion['content']);
+
+                if ($this->io->isVerbose()) {
+                    $this->io->startProcess(
+                        sprintf(
+                            'Content (expected "%s")',
+                            StringUtility::createExcerpt($criterion['content'], 30)
+                        ),
+                        2
+                    );
+                    $processEndStatus = $contentMatches ? AbstractCommand::STATUS_SUCCESS : AbstractCommand::STATUS_ERROR;
+                    $this->io->endProcess('', $processEndStatus);
+                }
+
                 if (!$contentMatches) {
                     $failedCriterionName = 'content';
                     $failedCriterionValue =  $criterion['content'];

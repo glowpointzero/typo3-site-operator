@@ -1,8 +1,9 @@
 <?php
 namespace Glowpointzero\SiteOperator\SiteCheckup\Processors;
 
+use Glowpointzero\SiteOperator\Console\MessageCollector;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Style\SymfonyStyle;
+use Glowpointzero\SiteOperator\Console\SymfonyStyle;
 
 interface SiteCheckupProcessorInterface {
     /**
@@ -26,7 +27,12 @@ interface SiteCheckupProcessorInterface {
     public function setSymfonyStyle(SymfonyStyle $io);
 
     /**
-     * @return bool
+     * @param MessageCollector $messageCollector
+     */
+    public function setMessageCollector(MessageCollector &$messageCollector);
+
+    /**
+     * @return int
      */
     public function run();
 }
