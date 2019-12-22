@@ -12,6 +12,7 @@
     }
   ],
   "require": {
+    "typo3/cms-core": "^9.5",
     "symfony/console": "^3.0 || ^4.0",
     "symfony/filesystem": "^3.0 || ^4.0"
   },
