@@ -1,33 +1,32 @@
 # TYPO3 Site Operator
 The «site operator» is a utility extension that helps you
-configure/run your TYPO3 instance. It makes some tedious
-tasks more fun.
+configure and run your TYPO3 instance. It makes some tedious
+tasks more easy and fun.
 
 ## Features
 (see details and how-to further down below)
 - Removes the need for TypoScript templates and automatically
-  including those from your site package (respecting
+  includes those from your site package (respecting
   application context).
 - Provides a dead-simple way to set up email messages to be
   rendered via Fluid, including any assets such as images and
   css.
-- Distributes common values (such as ids, colors, paths, anything)
-  on whatever application level they're needed, defining them in
-  one single place only!
-- Generates «static resources» such as images or any text-based
-  files. So, it's possible to pre-render favicons, but also SVGs
-  or TypoScript files. This may make sense when distributing
-  common values over multiple application levels, closing the
-  gap between multiple technologies (i.e. CSS and TypoScript).
-  As an example, think about using colors in CSS, but also
-  distribute the same value to a site manifest file to get the
-  look and feel of your site right).
+- Distributes common values (such as ids, colors, paths, anything
+  really) to whatever application level they're needed, defining
+  them in one single place only! You might need color definitions
+  in a 'manifest.json' file, but of course the same values are
+  needed in your (s)css as well.
+- Generates «static resources» in general, such as images or
+  any text-based files (see above). So, it's possible to
+  pre-render favicons, but also SVG or TypoScript files.
 - Takes pre-configured scheduler tasks and makes sure they're
   installed on deployment / installation.
-- Provides a new approach to TCA building in a way that is fun,
-  reliable and transparent (replaces 100 lines of those those huge
-  array structures with 10-20 chainable, meaningful method calls).
+- Provides an object/chaining-based approach to TCA building. This
+  enables you to build pretty large TCA structures with
+  with 10-20 chainable, meaningful method calls.
 - Provides various site- or environment-related utility methods.
+- Smoke-tests your sites in any context with some easily
+  maintainable and transparently declared configuration.
 
 **Check out [the examples in the documentation directory](Documentation/Examples).
 These will make sense to integrators/developers immediately.**
@@ -41,15 +40,23 @@ These will make sense to integrators/developers immediately.**
    - enables you to remove static values from your setup, by retrieving
      the current site package (`ProjectInstance::getSitePackageKey()`)
 3. Whenever the 'site operator configuration' (config.json) is mentioned,
-   it refers to a (optional) json file located under one of these paths
-   (most to least recommended):
-   - ./config/typo3-site-operator/config.json
+   it refers to a json file, which should be located under
+   './config/typo3-site-operator/config.json'. If there is no
+   configuration found under this path, the following paths are
+   also checked:
    - ./config/typo3-site-operator.json
    - ./typo3-site-operator.json
    - ./web/typo3conf/typo3-site-operator.json
    
    (assuming the current directory is your project directory and `web` is
    your public directory)
+   
+   You will be asked if you'd like this file to be
+   created once you run a site operator command.
+   
+   *You may split up your configuration* in whatever way
+   you like and reference all the separate configuration
+   files in the 'includes' section of the main 'config.json'.
 
 ## Features
 
@@ -280,6 +287,26 @@ return $myTca;
 - If not overridden in the `TcaBuilder::create` call, *grouping* labels (tabs
   and palettes) will be attempted to be retrieved in
   `EXT:my_extension/Resources/Private/Language/Model/MyModel.xlf:propertyGroup.[palette or tab id]`
+
+
+### Smoke tests
+Smoke testing is done via the `operator:siteCheckup`
+command, which takes its tasks from the according
+configuration key ('siteCheckup') in your site operator
+configuration. This package has some inbuilt test classes
+(called "processors"):
+- HTTP response processor (check return headers *and* content)
+- Scheduled tasks processor (basically checks, whether cronjobs are running)
+- XML sitemap processor (resolves given sitemaps of all available sites)
+- Variable processor (simple variable matching tests to
+  validate an instance's configuration for example).
+
+The site-related smoke tests automatically run per site and per language,
+but may be restricted by the according configuration option
+(see examples).
+
+Configuring these tests is super straight forward and even
+*introducing your very own processor is a matter of minutes!*
 
 
 ### Utility methods

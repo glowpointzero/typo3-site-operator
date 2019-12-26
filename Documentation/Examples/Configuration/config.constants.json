@@ -1,0 +1,12 @@
+{
+  "constants": {
+    "colorPalette": {
+      "primaryColor": {
+        "hex": "#500000"
+      },
+      "darkerPrimaryColor": {
+        "hex": "#380000"
+      }
+    }
+  }
+}
