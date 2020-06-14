@@ -1,0 +1,47 @@
+{
+  "siteCheckup": {
+    "Scheduler is running": {
+      "processor": "\\Glowpointzero\\SiteOperator\\SiteCheckup\\Processors\\SchedulerProcessor",
+      "arguments": {
+        "lastSeenMaximumMinutes": 5
+      }
+    },
+    "Image rendering configuration is set correctly": {
+      "processor": "\\Glowpointzero\\SiteOperator\\SiteCheckup\\Processors\\VariableProcessor",
+      "arguments": {
+        "successCriteria": [
+          {"GLOBALS|TYPO3_CONF_VARS|GFX|jpg_quality": "/^(9[5-9]|100)$/"},
+          {"GLOBALS|TYPO3_CONF_VARS|GFX|processor_colorspace": "sRGB"}
+        ]
+      }
+    },
+    "Sitemaps of site 'foo' (all languages) are valid": {
+      "sitesAndLanguages": {"foo": []},
+      "processor": "\\Glowpointzero\\SiteOperator\\SiteCheckup\\Processors\\SitemapProcessor",
+      "arguments": {
+        "location": "sitemap.xml"
+      }
+    },
+    "Regular page on site 'bar' in two of the localizationsa are indexable": {
+      "sitesAndLanguages": {"bar": [2, 4]},
+      "processor": "\\Glowpointzero\\SiteOperator\\SiteCheckup\\Processors\\HttpResponseProcessor",
+      "arguments": {
+        "location": "",
+        "successCriteria": [
+          {"statusCode": "200"},
+          {"content": "/<meta name=\"robots\" content=\"index,follow\" \\/>/i"}
+        ]
+      }
+    },
+    "404-page returns 404 status and 'noindex, nofollow'": {
+      "processor": "\\Glowpointzero\\SiteOperator\\SiteCheckup\\Processors\\HttpResponseProcessor",
+      "arguments": {
+        "location": "foo/bar/shouldnt-exist",
+        "successCriteria": [
+          {"statusCode": "404"},
+          {"content": "/<meta name=\"robots\" content=\"noindex(,nofollow)?\" \\/>/i"}
+        ]
+      }
+    }
+  }
+}

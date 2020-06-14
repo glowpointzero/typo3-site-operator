@@ -1,6 +1,19 @@
 <?php
 namespace Glowpointzero\SiteOperator\Command;
 
+/*
+ * This file is part of the TYPO3 CMS project.
+ *
+ * It is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License, either version 2
+ * of the License, or any later version.
+ *
+ * For the full copyright and license information, please read the
+ * LICENSE.txt file that was distributed with this source code.
+ *
+ * The TYPO3 project - inspiring people to share!
+ */
+
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
@@ -22,7 +35,7 @@ class GenerateStaticResourcesCommand extends AbstractCommand
     public function validateConfigurationForTheCurrentCommand()
     {
         $validationIssues = [];
-        
+
         $resources = @$this->configuration['generatedResources'];
         if (!is_array($resources)) {
             $validationIssues[] = 'The "generatedResources" section could not be resolved to an array.';
@@ -42,33 +55,11 @@ class GenerateStaticResourcesCommand extends AbstractCommand
     {
         parent::configure();
         $this->addOption(
-            'force',
+            'all',
             NULL,
             \Symfony\Component\Console\Input\InputOption::VALUE_NONE,
-            'If set, all files will be overridden / regenerated without asking permission to override.'
+            'If set, all files will be regenerated, even the ones that seem up to date.'
         );
-        $this->addOption(
-            'outdated',
-            NULL,
-            \Symfony\Component\Console\Input\InputOption::VALUE_NONE,
-            'Only outdated or non-existent resources will be (re)generated. Without asking for permission to override.'
-        );
-
-    }
-    
-    /**
-     * @inheritdoc
-     */
-    public function interact(InputInterface $input, OutputInterface $output)
-    {
-        if ($input->getOption('outdated') && $input->getOption('force')) {
-            $this->io->warning(
-                'You\'ve activated options "force" and "outdated", which'
-                . ' doesn\'t make sense as "outdated" will force-regenerate'
-                . ' outdated resources anyway. Deactivating "force".'
-            );
-            $input->setOption('force', false);
-        }
     }
 
     /**
@@ -83,11 +74,15 @@ class GenerateStaticResourcesCommand extends AbstractCommand
             return;
         }
         
-        $this->io->comment(sprintf('Generating %s static resources...', count($this->configuration['generatedResources'])));
+        $this->io->note(sprintf('Generating %s static resources...', count($this->configuration['generatedResources'])));
         
         foreach ($this->configuration['generatedResources'] as $resourceTargetPath => $generatorConfiguration)
         {
-            $this->io->comment(sprintf('Generating %s...', $resourceTargetPath));
+            $resourceTargetPathExcerpt = substr($resourceTargetPath, -40);
+            if (strlen($resourceTargetPath) > strlen($resourceTargetPathExcerpt)) {
+                $resourceTargetPathExcerpt = '(...)' . $resourceTargetPathExcerpt;
+            }
+            $this->io->startProcess(sprintf('Generating "%s"', $resourceTargetPathExcerpt));
             $sourcePath = './' . $generatorConfiguration['configuration']['source'];
             $fileExists = $this->fileSystem->exists($resourceTargetPath);
             $fileIsOutdated = true;
@@ -96,62 +91,40 @@ class GenerateStaticResourcesCommand extends AbstractCommand
                 $fileIsOutdated = filemtime($resourceTargetPath) < filemtime($sourcePath);
             }
 
-            if (!$fileIsOutdated && $input->getOption('outdated')) {
-                $this->io->comment(
-                    sprintf(
-                        'Skipping, as the target file seems up-to-date (last updated on %s. Source File: %s).',
-                        date('d.m.Y H:i', filemtime($resourceTargetPath)),
-                        date('d.m.Y H:i', filemtime($sourcePath))
-                    )
-                );
-                continue;
-            }
-
-            if ($fileExists && !$fileIsOutdated && !$input->getOption('force') && !$input->getOption('outdated')) {
-                $overwriteCurrentFile = $this->io->confirm(
-                    sprintf(
-                        'Target resource %s exists. Overwrite?',
-                        $resourceTargetPath
-                    ),
-                    false
+            if ($fileExists && !$fileIsOutdated && !$input->getOption('all')) {
+                $this->io->endProcess('skipped', AbstractCommand::STATUS_INFO);
+                if ($this->io->isVerbose()) {
+                    $this->io->info(
+                        sprintf(
+                            'Skipping, as the target file seems up-to-date (last updated on %s. Source File: %s).',
+                            date('d.m.Y H:i', filemtime($resourceTargetPath)),
+                            date('d.m.Y H:i', filemtime($sourcePath))
+                        )
                     );
-                
-                if (!$overwriteCurrentFile) {
-                    continue;
                 }
+                continue;
             }
             
             $targetDirectoryExists = $this->fileSystem->exists(dirname($resourceTargetPath));
-            $createDirectory = $targetDirectoryExists || $input->getOption('force');
-            if (!$targetDirectoryExists && !$createDirectory) {
-                $createDirectory = $this->io->confirm(sprintf(
-                    'Just to check: The target directory %s does not exist. Create and Continue?',
-                    dirname($resourceTargetPath)
-                    ), true);
-            }
-            
-            if (!$createDirectory) {
-                continue;
-            }
-            
+
             if (!$targetDirectoryExists) {
                 $this->fileSystem->mkdir(dirname($resourceTargetPath));
             }
             
             if (!isset($generatorConfiguration['generator']) || empty($generatorConfiguration['generator'])) {
-                $this->io->error('"generator" missing.');
+                $this->io->endProcess('"generator" configuration node is missing.', AbstractCommand::STATUS_ERROR);
                 continue;
             }
             
             if (!isset($generatorConfiguration['configuration']) || empty($generatorConfiguration['configuration'])) {
-                $this->io->error('Generator configuration missing.');
+                $this->io->endProcess('Generator configuration missing.', AbstractCommand::STATUS_ERROR);
                 continue;
             }
             
             $generatorMethodName = sprintf('generate%sResource', ucfirst(strtolower($generatorConfiguration['generator'])));
-            
+
             if (!method_exists($this, $generatorMethodName)) {
-                $this->io->error(sprintf('Invalid generator method "%s".', $generatorConfiguration['generator']));
+                $this->io->endProcess(sprintf('Invalid generator method "%s".', $generatorConfiguration['generator']), AbstractCommand::STATUS_ERROR);
                 continue;
             }
             
@@ -163,14 +136,11 @@ class GenerateStaticResourcesCommand extends AbstractCommand
             );
             
             if (!$resourceHasBeenGenerated) {
-                $this->io->error($errorMessage);
-                if (!$this->io->confirm('Continue?')) {
-                    continue;
-                }
+                $this->io->endProcess($errorMessage, AbstractCommand::STATUS_ERROR);
+                continue;
             }
             
-            $this->io->success(sprintf('Resource %s has been generated.', $resourceTargetPath));
-            
+            $this->io->endProcess();
         }
     }
     
@@ -206,7 +176,7 @@ class GenerateStaticResourcesCommand extends AbstractCommand
         $returnValue = exec($command);
         
         if (!empty($returnValue)) {
-            $this->io->comment($returnValue); // This should usually be empty.
+            $this->io->notice($returnValue); // This should usually be empty.
         }
         
         if (!$this->fileSystem->exists($tempTargetFile) || filesize($tempTargetFile) === 0) {

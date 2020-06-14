@@ -1,6 +1,20 @@
 <?php
 namespace Glowpointzero\SiteOperator\Command;
 
+/*
+ * This file is part of the TYPO3 CMS project.
+ *
+ * It is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License, either version 2
+ * of the License, or any later version.
+ *
+ * For the full copyright and license information, please read the
+ * LICENSE.txt file that was distributed with this source code.
+ *
+ * The TYPO3 project - inspiring people to share!
+ */
+
+use Glowpointzero\SiteOperator\Utility\FileSystemUtility;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use TYPO3\CMS\Scheduler\Scheduler;
@@ -84,21 +98,21 @@ class InstallScheduledTasksCommand extends AbstractCommand
         $configuredTasks = [];
         
         foreach ($this->configuration['scheduledTasksSourcePaths'] as $taskSourceFilePath) {
-            $this->io->comment(sprintf('Reading tasks from %s', $taskSourceFilePath));
-            if (!$this->fileSystem->exists($taskSourceFilePath)) {
+            $taskSourceFileAbsolute = FileSystemUtility::resolvePath($taskSourceFilePath, $this->configurationFilePath);
+            if (!$taskSourceFileAbsolute) {
                 $this->io->error(sprintf('Scheduled tasks file %s does not exist.', $taskSourceFilePath));
                 continue;
             }
-            
-            $newTasks = include $taskSourceFilePath;
+
+            $newTasks = include $taskSourceFileAbsolute;
             if (!is_array($newTasks)) {
-                $this->io->error(sprintf('Scheduled tasks file %s does not return an array.', $taskSourceFilePath));
+                $this->io->error(sprintf('Scheduled tasks file %s does not return an array.', $taskSourceFileAbsolute));
                 continue;
             }
             $configuredTasks = array_merge($configuredTasks, $newTasks);
         }
         
-        if (count($this->configuration['scheduledTasksSourcePaths']) > 0 && count($tasks) === 0) {
+        if (count($this->configuration['scheduledTasksSourcePaths']) > 0 && count($configuredTasks) === 0) {
             $this->io->caution(
                 sprintf(
                     'No tasks found in any of the referenced files (%s).',
@@ -116,7 +130,7 @@ class InstallScheduledTasksCommand extends AbstractCommand
      */
     protected function registerScheduledTasks(array $tasks)
     {        
-        $this->io->comment(sprintf('Registering %s scheduled tasks...', count($tasks)));
+        $this->io->note(sprintf('Registering %s scheduled tasks...', count($tasks)));
                 
         /** @var Scheduler $scheduler */
         $scheduler = $this->objectManager->get(Scheduler::class);
@@ -136,14 +150,14 @@ class InstallScheduledTasksCommand extends AbstractCommand
                 sleep(0.5);
                 continue;
             }
-                        
-            $this->io->comment('Registering task "' . $task->getTaskClassName() . '"');
+
+            $this->io->note('Registering task "' . $task->getTaskClassName() . '"');
             sleep(0.5);
-            
+
             $similarTask = $this->getSameRegisteredTask($task);
             
             if ($similarTask instanceof AbstractTask) {
-                $this->io->comment(
+                $this->io->notice(
                     sprintf('A task like this is already registered (uid %s)', $similarTask->getTaskUid())
                 );
                 continue;

@@ -1,0 +1,20 @@
+{
+  "includes": [
+    "config.constants.json",
+    "config.generatedResources.json",
+    "config.siteCheckup.json"
+  ],
+  "constants": {
+    "colorPalette": {
+      "primaryColor": {
+        "hex": "#500000"
+      },
+      "darkerPrimaryColor": {
+        "hex": "#380000"
+      }
+    }
+  },
+  "scheduledTasksSourcePaths": [
+    "config/ScheduledTasks.php"
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "symlinks": {
+    "web/typo3conf/AdditionalConfiguration.php": {
+      "source": "config/my/externalized/AdditionalConfiguration.php"
+    },
+    "web/fileadmin/linked_directory_selectable_by_user": {
+      "sources": [
+        "some/directory",
+        "/another/path/on/your-system",
+        "/yet-another/path/on/your-system"
+      ]
+    }
+  }
+}

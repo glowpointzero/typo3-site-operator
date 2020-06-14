@@ -1,5 +1,7 @@
 {
+  "includes": [],
   "constants": {},
   "scheduledTasksSourcePaths": [],
-  "generatedResources": {}
+  "generatedResources": {},
+  "siteCheckup": {}
 }

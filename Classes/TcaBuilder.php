@@ -652,6 +652,56 @@ class TcaBuilder implements \Psr\Log\LoggerAwareInterface
      */
     public function andOverruleConfigurationWith(array $overridingConfiguration)
     {
+        $this->validateLastAddedItem();
+        if ($this->lastAddedItemProperty !== self::$ITEM_TYPE_COLUMN_PROPERTY) {
+            throw new TcaBuilderException(
+                sprintf(
+                    'Invalid configuration overrule call to a non-column item (%s "%s")',
+                    $this->lastAddedItemProperty,
+                    $this->lastAddedItemIdentifier),
+                1592126204
+            );
+        }
+
+        \TYPO3\CMS\Core\Utility\ArrayUtility::mergeRecursiveWithOverrule(
+            $this->{$this->lastAddedItemProperty}[$this->lastAddedItemIdentifier],
+            $overridingConfiguration
+        );
+
+        return $this;
+    }
+
+    /**
+     * Adds the last added item to the list of required columns.
+     *
+     * @return $this
+     * @throws TcaBuilderException
+     */
+    public function andMakeItRequired()
+    {
+        $this->validateLastAddedItem();
+        if ($this->lastAddedItemProperty !== self::$ITEM_TYPE_COLUMN_PROPERTY) {
+            throw new TcaBuilderException(
+                sprintf('Can\'t make items of type "%s" required.', $this->lastAddedItemProperty),
+                1545380424
+            );
+        }
+        $this->requiredColumnNames[] = $this->lastAddedItemIdentifier;
+        return $this;
+    }
+
+    /**
+     * Makes sure that an item (column or palette)
+     * has been added 'correctly', meaning the last
+     * added item is of type 'palette' or 'column'
+     * This method may be called before further
+     * attempted manipulation of the previously added
+     * item.
+     *
+     * @throws TcaBuilderException
+     */
+    protected function validateLastAddedItem()
+    {
         if (!$this->lastAddedItemProperty) {
             throw new TcaBuilderException(
                 'Missing "lastAddedItemType" property. Maybe no columns, tabs, etc. have been added yet?',
@@ -672,13 +722,6 @@ class TcaBuilder implements \Psr\Log\LoggerAwareInterface
                 1545380424
             );
         }
-
-        \TYPO3\CMS\Core\Utility\ArrayUtility::mergeRecursiveWithOverrule(
-            $this->{$this->lastAddedItemProperty}[$this->lastAddedItemIdentifier],
-            $overridingConfiguration
-        );
-
-        return $this;
     }
 
     /**
