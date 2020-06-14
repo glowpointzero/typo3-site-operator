@@ -653,6 +653,15 @@ class TcaBuilder implements \Psr\Log\LoggerAwareInterface
     public function andOverruleConfigurationWith(array $overridingConfiguration)
     {
         $this->validateLastAddedItem();
+        if ($this->lastAddedItemProperty !== self::$ITEM_TYPE_COLUMN_PROPERTY) {
+            throw new TcaBuilderException(
+                sprintf(
+                    'Invalid configuration overrule call to a non-column item (%s "%s")',
+                    $this->lastAddedItemProperty,
+                    $this->lastAddedItemIdentifier),
+                1592126204
+            );
+        }
 
         \TYPO3\CMS\Core\Utility\ArrayUtility::mergeRecursiveWithOverrule(
             $this->{$this->lastAddedItemProperty}[$this->lastAddedItemIdentifier],
