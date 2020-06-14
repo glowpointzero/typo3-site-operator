@@ -14,6 +14,12 @@ namespace Glowpointzero\SiteOperator;
  * The TYPO3 project - inspiring people to share!
  */
 
+use TYPO3\CMS\Core\Core\Environment;
+use TYPO3\CMS\Core\Package\PackageManager;
+use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Extbase\Object\ObjectManager;
+
 class ProjectInstance
 {
     protected static $sitePackageKey;
@@ -26,8 +32,7 @@ class ProjectInstance
      * Initialises this class. Should only be done once per request.
      *
      * @todo Maybe throw an exception, if somebody tries to re-initialize this class?
-     * @param type $sitePackageKey
-     * @throws \Exception
+     * @param string $sitePackageKey
      */
     public static function initialize(
         $sitePackageKey
@@ -127,15 +132,24 @@ class ProjectInstance
      */
     protected static function retrieveApplicationVersion()
     {
-        $projectPath = \TYPO3\CMS\Core\Core\Environment::getProjectPath();
-        $rootGitRepository = new \Symfony\Component\Intl\Util\GitRepository($projectPath);
-        
-        $lastTag = $rootGitRepository->getLastTag() ?: 'unreleased';
-        $lastHash = substr($rootGitRepository->getLastCommitHash(), 0, 10);
+        try {
+            $versionDescription = exec(sprintf('cd "%s" && git describe --long', Environment::getProjectPath()));
+            if (!preg_match('/^([a-z0-9\.\-]+)\-[0-9]+\-[a-z0-9]+$/', $versionDescription)) {
+                return '(version not parsable)';
+            }
+            list($tag, $commitSinceTag, $commitHash) = explode('-', $versionDescription);
 
-        return $lastTag . ' / ' . $lastHash;
+            $applicationVersion = $tag;
+            if (intval($commitSinceTag) > 0) {
+                $applicationVersion .= sprintf(' (+%s / %s)', $commitSinceTag, substr($commitHash, 1));
+            }
+
+        } catch (\Exception $exception) {
+            $applicationVersion = '(version unretrievable)';
+        }
+        return $applicationVersion;
     }
-    
+
     /**
      * Returns the application version string.
      *
