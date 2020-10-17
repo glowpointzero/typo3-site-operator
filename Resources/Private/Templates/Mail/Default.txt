@@ -1,0 +1,14 @@
+<f:layout name="Default" />
+
+<f:section name="Title"><f:spaceless>
+<f:if condition="{subject}">{subject}</f:if>
+<f:if condition="{headline}">{headline}</f:if>
+</f:spaceless></f:section>
+
+<f:section name="Main">
+<f:spaceless>
+<f:if condition="{introduction}">{introduction}
+</f:if>
+<f:if condition="{content}">{content}</f:if>
+</f:spaceless>
+</f:section>

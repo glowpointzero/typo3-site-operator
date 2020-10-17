@@ -259,9 +259,9 @@ Example:
 
 ### HTML & plain text emails
 Set up HTML email in 3-4 lines of code. Any email sent via
-the regular TYPO3 `MailMessage` core class will be extended
-to use Fluid templates. Just as important: images and css
-are integrated very (very!) easily.
+the regular TYPO3 `FluidEmail` core class will be extended
+so that it is super simple to embed images and CSS. The examples
+mentioned even show how easy it is to 
 
 Passed HTML content (`setBody(...)`) is automatically converted to
 text, reformatting commonly used HTML structures (p.e. `<tr>`
@@ -286,26 +286,20 @@ for reference and available variables!
 
 1. Extend *AdditionalConfiguration.php*
    ```PHP
-   MailMessage::setDefaultTemplatePathAndFilename(
-       'EXT:my_site_package/Resources/Private/Templates/Email/Text.html',
-       'EXT:my_site_package/Resources/Private/Templates/Email/Html.html',
-   );
-   MailMessage::setDefaultCssFilePath('EXT:my_site_package/Resources/Public/Css/email.css');
-   MailMessage::addDefaultEmbeddable('logo', 'EXT:my_site_package/Resources/Public/Images/email-logo.png');
+   \Glowpointzero\SiteOperator\Configuration::enableAdvancedFluidEmails();
+
+   EmailMessage::setDefaultCssFilePath('EXT:my_site_package/Resources/Public/Css/email.css');
+   EmailMessage::addDefaultEmbeddable('logo', 'EXT:my_site_package/Resources/Public/Images/email-logo.png');
    ```
 
-    Templates and CSS may optionally be limited to a specific site (on
+    Embeddables and CSS may optionally be limited to a specific site (on
     multi-site setups), using the third parameter:
     ```PHP 
-    MailMessage::setDefaultTemplatePathAndFilename(
-        'EXT:my_site_package/Resources/Private/Templates/Email/Text.html',
-        'EXT:my_site_package/Resources/Private/Templates/Email/Html.html',
-        'site-foo'
-    );
-    MailMessage::setDefaultCssFilePath('EXT:.../styles.css', 'site-foo');
+    EmailMessage::addDefaultEmbeddable('logo', 'EXT:my_site_package/Resources/Public/Images/email-logo-site-x.png', 'site-foo');
+    EmailMessage::setDefaultCssFilePath('EXT:.../styles-site-foo.css', 'site-foo');
     ```
 
-2. Provide *Fluid email template*s
+2. The embeddables and CSS are included in the Fluid templates like so:
    ```HTML
    (...)
    <style type="text/css">{css}</style>
@@ -317,28 +311,28 @@ for reference and available variables!
    (...)
    ```
 
-#### General behavior
+#### Templating
+This package comes with a very simple setup of templates,
+layouts and partials that include rendering/inclusion
+of CSS too. It replaces the 'Default' message as well
+as the 'System' message templating that gets used for
+alerts for example. The templating may be of course be 
+overridden. Have a look into the 'Resources/Public/'.
+
+#### Overriding default 
 Any default settings / assets may be overridden or extended
-on a case-to-case basis using the API methods
-- `setTemplatePathAndFilename`
+on EmailMessage instances using the API methods
 - `setCssFilePath`
 - `addEmbeddable`
 
-... after creating a `MailMessage` instance.
-
-At this time, the 'setBody' method will detect whether
-the given content is text or HTML and generate the
-counterpart automagically, accordingly. You might want use
-the `$contentType` argument, if the detection fails though.
-
-```php
-(...)
-public function setBody($body, $contentType = null, $charset = null)
-{
-(...)
-```
-
-
+Example:
+```PHP
+// We're automatically getting an instance of 'EmailMessage'
+// here, as the core's 'FluidEmail' class has been xclassed
+// by our 'enableAdvancedFluidEmails' call in configuration.
+$mailMessage = GeneralUtility::makeInstance(FluidEmail::class);
+$mailMessage->setCssFilePath('path-that-overrides/default-styles.css');
+```   
 
 ### Automatic TypoScript template setup
 Automatically include `setup.typoscript` as well as `constants.typoscript` of your

@@ -1,0 +1,18 @@
+<html data-namespace-typo3-fluid="true"
+      xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers">
+<f:render partial="Css" arguments="{_all}" />
+<f:render partial="MessageTop" arguments="{_all}" />
+<table id="main">
+    <tr>
+        <td>&nbsp;</td>
+        <td id="content">
+            <f:render partial="ContentTop" arguments="{_all}" />
+            <f:render section="Title" optional="true" />
+            <f:render section="Main" optional="true" />
+            <f:render partial="ContentBottom" arguments="{_all}" />
+        </td>
+        <td>&nbsp;</td>
+    </tr>
+</table>
+<f:render partial="MessageBottom" arguments="{_all}" />
+</html>
