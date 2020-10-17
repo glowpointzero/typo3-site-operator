@@ -41,6 +41,7 @@ class SymlinkCommand extends AbstractCommand
     /**
      * @param InputInterface $input
      * @param OutputInterface $output
+     * @return integer
      */
     public function execute(InputInterface $input, OutputInterface $output)
     {
@@ -56,6 +57,7 @@ class SymlinkCommand extends AbstractCommand
                 $input->getOption('override-existing')
             );
         }
+        return 0;
     }
 
     /**

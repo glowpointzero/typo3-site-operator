@@ -65,7 +65,7 @@ class InstallScheduledTasksCommand extends AbstractCommand
     /**
      * @param InputInterface $input
      * @param OutputInterface $output
-     * @return type
+     * @return integer
      */
     public function execute(InputInterface $input, OutputInterface $output)
     {
@@ -76,6 +76,7 @@ class InstallScheduledTasksCommand extends AbstractCommand
 
         $tasks = $this->loadConfiguredTasks();
         $this->registerScheduledTasks($tasks);
+        return 0;
     }
     
     /**

@@ -65,13 +65,13 @@ class GenerateStaticResourcesCommand extends AbstractCommand
     /**
      * @param InputInterface $input
      * @param OutputInterface $output
-     * @return null
+     * @return int
      */
     public function execute(InputInterface $input, OutputInterface $output)
     {
         if (count($this->configuration['generatedResources']) === 0) {
             $this->io->warning('No resources configured to generate.');
-            return;
+            return 0;
         }
         
         $this->io->note(sprintf('Generating %s static resources...', count($this->configuration['generatedResources'])));
@@ -142,6 +142,8 @@ class GenerateStaticResourcesCommand extends AbstractCommand
             
             $this->io->endProcess();
         }
+
+        return 0;
     }
     
     /**

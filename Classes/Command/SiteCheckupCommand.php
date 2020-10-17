@@ -30,6 +30,7 @@ class SiteCheckupCommand extends AbstractCommand
     /**
      * @param InputInterface $input
      * @param OutputInterface $output
+     * @return integer
      */
     public function execute(InputInterface $input, OutputInterface $output)
     {
@@ -39,7 +40,7 @@ class SiteCheckupCommand extends AbstractCommand
         $checkups = $this->configuration['siteCheckup'];
         if (count($checkups) < 1) {
             $this->io->error('No site checkups configured.');
-            return;
+            return 1;
         }
 
         foreach ($checkups as $checkupIdentifier => $checkupConfiguration) {
@@ -62,7 +63,7 @@ class SiteCheckupCommand extends AbstractCommand
 
         $this->io->newLine();
         if (!count($this->messageCollector->getMessages())) {
-            return;
+            return 0;
         }
 
         // Output any collected, more detailed messages
@@ -73,6 +74,8 @@ class SiteCheckupCommand extends AbstractCommand
                 $message['severity']
             );
         }
+
+        return 1;
     }
 
     /**
