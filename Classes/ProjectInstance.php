@@ -15,10 +15,6 @@ namespace Glowpointzero\SiteOperator;
  */
 
 use TYPO3\CMS\Core\Core\Environment;
-use TYPO3\CMS\Core\Package\PackageManager;
-use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Extbase\Object\ObjectManager;
 
 class ProjectInstance
 {
@@ -38,9 +34,10 @@ class ProjectInstance
         $sitePackageKey
      ) {
         self::$sitePackageKey = $sitePackageKey;
-        
-        list($currentMainContext, $currentSubContext) 
-            = explode('/', \TYPO3\CMS\Core\Core\Environment::getContext());
+
+        $splitContext = explode('/', \TYPO3\CMS\Core\Core\Environment::getContext());
+        $currentMainContext = $splitContext[0];
+        $currentSubContext = (count($splitContext) > 1) ? $splitContext[1] : '';
 
         self::$mainApplicationContext = $currentMainContext ?: '';
         self::$applicationSubContext = $currentSubContext ?: '';
