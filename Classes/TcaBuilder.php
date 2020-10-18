@@ -549,8 +549,7 @@ class TcaBuilder implements \Psr\Log\LoggerAwareInterface
                 'type' => 'select',
                 'renderType' => 'selectMultipleSideBySide',
                 'foreign_table' => $relatedTableName,
-                'size' => 5,
-                'enableMultiSelectFilterTextfield' => true
+                'size' => 5
             ]
         ];
 
@@ -924,9 +923,7 @@ class TcaBuilder implements \Psr\Log\LoggerAwareInterface
         $tca = [
             'ctrl' => $this->ctrl,
             'columns' => $this->columns,
-            'interface' => [
-                'showRecordFieldList' => implode(', ', array_keys($this->columns))
-            ],
+            'interface' => [],
             'types' => [],
             'palettes' => [],
         ];
