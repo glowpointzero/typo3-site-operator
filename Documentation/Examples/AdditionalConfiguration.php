@@ -15,7 +15,7 @@
 use TYPO3\CMS\Core\Core\Environment;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use \Glowpointzero\SiteOperator\ProjectInstance;
-use \Glowpointzero\SiteOperator\Mail\MailMessage;
+use \Glowpointzero\SiteOperator\Mail\EmailMessage;
 
 /***
  * This is an example/dummy configuration file, demonstrating some
@@ -76,15 +76,17 @@ if (ProjectInstance::runsInApplicationContext(null, 'local')) {
     );
 }
 
-// Set email templates
-MailMessage::setDefaultTemplatePathAndFilename(
-    sprintf('EXT:%s/Resources/Private/Templates/Mail/Text.html', ProjectInstance::getSitePackageKey()),
-    sprintf('EXT:%s/Resources/Private/Templates/Mail/Html.html', ProjectInstance::getSitePackageKey())
-);
-MailMessage::setDefaultCssFilePath(sprintf('EXT:%s/Resources/Public/Css/email.css', ProjectInstance::getSitePackageKey()));
-MailMessage::addDefaultEmbeddable('logo', sprintf('EXT:%s/Resources/Public/Images/email-logo-all-sites.png', ProjectInstance::getSitePackageKey()));
-MailMessage::addDefaultEmbeddable('logo', sprintf('EXT:%s/Resources/Public/Images/email-logo-site-one.png', ProjectInstance::getSitePackageKey()), 'site-one');
-MailMessage::addDefaultEmbeddable('logo', sprintf('EXT:%s/Resources/Public/Images/email-logo-site-two.png', ProjectInstance::getSitePackageKey()), 'site-two');
+// Implement advanced fluid emails
+\Glowpointzero\SiteOperator\Configuration::enableAdvancedFluidEmails();
+
+$GLOBALS['TYPO3_CONF_VARS']['MAIL']['layoutRootPaths'][] = sprintf('EXT:%s/Resources/Private/Layouts/Mail', ProjectInstance::getSitePackageKey());
+$GLOBALS['TYPO3_CONF_VARS']['MAIL']['partialRootPaths'][] = sprintf('EXT:%s/Resources/Private/Partials/Mail', ProjectInstance::getSitePackageKey());
+$GLOBALS['TYPO3_CONF_VARS']['MAIL']['templateRootPaths'][] = sprintf('EXT:%s/Resources/Private/Templates/Mail', ProjectInstance::getSitePackageKey());
+
+EmailMessage::setDefaultCssFilePath(sprintf('EXT:%s/Resources/Public/Css/email.css', ProjectInstance::getSitePackageKey()));
+EmailMessage::addDefaultEmbeddable('logo', sprintf('EXT:%s/Resources/Public/Images/email-logo-all-sites.png', ProjectInstance::getSitePackageKey()));
+EmailMessage::addDefaultEmbeddable('logo', sprintf('EXT:%s/Resources/Public/Images/email-logo-site-one.png', ProjectInstance::getSitePackageKey()), 'site-one');
+EmailMessage::addDefaultEmbeddable('logo', sprintf('EXT:%s/Resources/Public/Images/email-logo-site-two.png', ProjectInstance::getSitePackageKey()), 'site-two');
 
 
 /*

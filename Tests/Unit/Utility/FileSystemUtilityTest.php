@@ -14,70 +14,75 @@ namespace Glowpointzero\SiteOperator\Tests\Unit\Utility;
  * The TYPO3 project - inspiring people to share!
  */
 
+use Glowpointzero\SiteOperator\ProjectInstance;
 use Glowpointzero\SiteOperator\Tests\Unit\UnitTestCase;
-use Glowpointzero\SiteOperator\Utility\ArrayUtility;
+use Glowpointzero\SiteOperator\Utility\FileSystemUtility;
+use TYPO3\CMS\Core\Core\ApplicationContext;
+use TYPO3\CMS\Core\Core\Environment;
 
 class FileSystemUtilityTest extends UnitTestCase
 {
-    protected $testArray = [
-        'foo' => [
-            'bar' => 1,
-            'baz' => 'testvalue',
-            0 => 'zero',
-            1 => 'one'
-        ],
-        'bar' => [
-            'baz' => false,
-            'emptyTestArray' => [],
-            'subarray' => ['apple', 'orange'],
-            '0' => 'also zero',
-            '1' => 'also one',
-            1 => 'one, but as integer'
-        ]
-    ];
-
-    /**
-     * @test
-     */
-    public function attemptsToRetrieveNonExistantArrayElementsReturnNull()
+    public function setUp()
     {
-        $result1 = ArrayUtility::getNestedArrayValue($this->testArray, ['nonexistant']);
-        $this->assertNull($result1);
-
-        $result2 = ArrayUtility::getNestedArrayValue($this->testArray, ['foo', 'nonexistant']);
-        $this->assertNull($result2);
+        Environment::initialize(
+            new ApplicationContext('Testing/Local'),
+            Environment::isCli(),
+            Environment::isComposerMode(),
+            Environment::getProjectPath(),
+            Environment::getPublicPath(),
+            Environment::getVarPath(),
+            Environment::getConfigPath(),
+            Environment::getCurrentScript(),
+            Environment::isWindows() ? 'WINDOWS' : 'UNIX'
+        );
+        ProjectInstance::initialize('my_package_key');
     }
 
     /**
      * @test
      */
-    public function nestedValuesMayBeRetrieved()
+    public function aFullyContextDependentFileTakesPrecedenceOverAnyLessSpecificFile()
     {
-        $this->assertSame(
-            ['apple', 'orange'],
-            ArrayUtility::getNestedArrayValue($this->testArray, ['bar', 'subarray'])
+        $contextDependentFile = FileSystemUtility::getContextDependentFilePath(
+            'EXT:site_operator/Tests/Unit/Fixtures/ContextDependentFiles/allFilesAvailable',
+            'myfile',
+            'txt'
+        );
+        $this->assertEquals(
+            'EXT:site_operator/Tests/Unit/Fixtures/ContextDependentFiles/allFilesAvailable/myfile.testing.local.txt',
+            $contextDependentFile
         );
     }
 
     /**
      * @test
      */
-    public function numericSegmentStringsRetrieveIntegerIndexValuesAsWell()
+    public function mainContextOnlyFallbackIsUsedIfNoFileWithFullContextNamingIsAvailable()
     {
-        $this->assertSame(
-            'zero',
-            ArrayUtility::getNestedArrayValue($this->testArray, ['foo', '0'])
+        $contextDependentFile = FileSystemUtility::getContextDependentFilePath(
+            'EXT:site_operator/Tests/Unit/Fixtures/ContextDependentFiles/onlyMainContextAvailable',
+            'myfile',
+            'txt'
+        );
+        $this->assertEquals(
+            'EXT:site_operator/Tests/Unit/Fixtures/ContextDependentFiles/onlyMainContextAvailable/myfile.testing.txt',
+            $contextDependentFile
         );
     }
 
     /**
      * @test
      */
-    public function integerSegmentValuesRetrieveStringIndexValuesAsWell()
+    public function contextLessFileWillBeUsedIfNoContextDependentFilesAreAvailable()
     {
-        $this->assertSame(
-            'also zero',
-            ArrayUtility::getNestedArrayValue($this->testArray, ['bar', 0])
+        $contextDependentFile = FileSystemUtility::getContextDependentFilePath(
+            'EXT:site_operator/Tests/Unit/Fixtures/ContextDependentFiles/noContextFileAvailable',
+            'myfile',
+            'txt'
+        );
+        $this->assertEquals(
+            'EXT:site_operator/Tests/Unit/Fixtures/ContextDependentFiles/noContextFileAvailable/myfile.txt',
+            $contextDependentFile
         );
     }
 }

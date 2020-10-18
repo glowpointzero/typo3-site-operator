@@ -1,0 +1,14 @@
+<f:spaceless>
+<f:render partial="MessageTop" arguments="{_all}" /></f:spaceless><f:spaceless>
+<f:render partial="ContentTop" arguments="{_all}" /></f:spaceless><f:spaceless>
+<f:spaceless><f:if condition="{f:render(section:'Title', optional: 'true')}">
+=====================================================
+<f:render section="Title" optional="true" />
+=====================================================
+</f:if></f:spaceless>
+<f:render section="Main" optional="true" />
+<f:render partial="ContentBottom" arguments="{_all}" />
+</f:spaceless>
+--
+<f:render partial="MessageBottom" arguments="{_all}" />
+

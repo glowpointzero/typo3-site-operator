@@ -1,0 +1,19 @@
+<html data-namespace-typo3-fluid="true"
+      xmlns:f="http://typo3.org/ns/TYPO3/CMS/Fluid/ViewHelpers">
+
+<f:layout name="Default" />
+<f:section name="Title">
+    <f:if condition="{subject}">
+        <h1>{subject}</h1>
+    </f:if>
+    <f:if condition="{headline}">
+        <h4>{headline}</h4>
+    </f:if>
+</f:section>
+
+<f:section name="Main">
+    <f:if condition="{introduction}"><p class="introduction">{introduction}</p></f:if>
+    <f:if condition="{content}">{content -> f:format.raw()}</f:if>
+</f:section>
+
+</html>
