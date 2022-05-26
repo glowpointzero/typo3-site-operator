@@ -3,6 +3,15 @@ The «site operator» is a utility extension that helps you
 configure and run your TYPO3 instance. It makes some tedious
 tasks more easy and fun.
 
+---
+## ! THIS PACKAGE IS NO LONGER MAINTAINED !
+
+Due to the lack of time to invest into its development
+and public interest, this package will no longer receive
+updates.
+
+---
+
 ## Features
 (see details and how-to further down below)
 
